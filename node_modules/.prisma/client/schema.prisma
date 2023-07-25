@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model cajas_bancos {
+  cajas_bancos_id Int         @id @default(autoincrement())
+  nombre_cuenta   String      @db.VarChar(200)
+  tipo_pago_id    Int         @db.SmallInt
+  cantidad_actual Int
+  user_id         Int
+  activo          Int         @db.SmallInt
+  tipos_pagos     tipos_pagos @relation(fields: [tipo_pago_id], references: [tipo_pago_id], onUpdate: Restrict, map: "fk_tipo_pago_id")
+  users           users       @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "fk_user_id_cb")
+
+  @@index([tipo_pago_id], map: "fk_tipo_pago_id")
+  @@index([user_id], map: "fk_user_id_cb")
+}
+
+model categorias {
+  categoria_id     Int                @id @default(autoincrement()) @db.SmallInt
+  categoria        String             @db.VarChar(200)
+  egresos_futuros  egresos_futuros[]
+  ingresos_futuros ingresos_futuros[]
+}
+
+model clientes {
+  cliente_id     Int      @id @default(autoincrement())
+  nombre         String   @db.VarChar(120)
+  apellido       String   @db.VarChar(200)
+  puesto         String   @db.VarChar(255)
+  celular        String?  @db.VarChar(30)
+  empresa        String   @db.VarChar(200)
+  dedica_empresa String   @db.Text
+  num_empleados  Int      @db.SmallInt
+  fecha          DateTime @db.Date
+  user_id        Int
+  activo         Int
+  users          users    @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "fk_user_id")
+
+  @@index([user_id], map: "fk_user_id")
+}
+
+model egresos_futuros {
+  egresos_futuros_id     Int         @id @default(autoincrement())
+  nombre_persona_empresa String      @db.VarChar(255)
+  concepto               String      @db.VarChar(255)
+  tipo_pago_id           Int         @db.SmallInt
+  categoria_id           Int         @db.SmallInt
+  monto                  Int
+  fecha_tentativa_pago   DateTime    @db.Date
+  user_id                Int
+  activo                 Boolean
+  categorias             categorias  @relation(fields: [categoria_id], references: [categoria_id], onUpdate: Restrict, map: "fk_categoria_id_egre")
+  tipos_pagos            tipos_pagos @relation(fields: [tipo_pago_id], references: [tipo_pago_id], onUpdate: Restrict, map: "fk_tipo_pago_id_egre")
+  users                  users       @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "fk_user_id_egre")
+
+  @@index([categoria_id], map: "fk_categoria_id_egre")
+  @@index([tipo_pago_id], map: "fk_tipo_pago_id_egre")
+  @@index([user_id], map: "fk_user_id_egre")
+}
+
+model ingresos_futuros {
+  ingresos_futuros_id    Int         @id @default(autoincrement())
+  nombre_persona_empresa String      @db.VarChar(255)
+  concepto               String      @db.VarChar(255)
+  tipo_pago_id           Int         @db.SmallInt
+  categoria_id           Int         @db.SmallInt
+  monto                  Int
+  fecha_tentativa_cobro  DateTime    @db.Date
+  user_id                Int
+  activo                 Boolean
+  categorias             categorias  @relation(fields: [categoria_id], references: [categoria_id], onUpdate: Restrict, map: "fk_categoria_id_ing")
+  tipos_pagos            tipos_pagos @relation(fields: [tipo_pago_id], references: [tipo_pago_id], onUpdate: Restrict, map: "fk_tipo_pago_id_ing")
+  users                  users       @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "fk_user_id_ing")
+
+  @@index([categoria_id], map: "fk_categoria_id_ing")
+  @@index([tipo_pago_id], map: "fk_tipo_pago_id_ing")
+  @@index([user_id], map: "fk_user_id_ing")
+}
+
+model tipos_pagos {
+  tipo_pago_id     Int                @id @default(autoincrement()) @db.SmallInt
+  tipo_pago        String             @db.VarChar(200)
+  cajas_bancos     cajas_bancos[]
+  egresos_futuros  egresos_futuros[]
+  ingresos_futuros ingresos_futuros[]
+}
+
+model typesusers {
+  typeuser_id Int     @id @default(autoincrement()) @db.SmallInt
+  typeuser    String  @db.VarChar(80)
+  users       users[]
+}
+
+model users {
+  user_id          Int                @id @default(autoincrement())
+  email            String             @db.VarChar(255)
+  password         String             @db.VarChar(255)
+  typeuser_id      Int                @db.SmallInt
+  activo           Int                @db.SmallInt
+  cajas_bancos     cajas_bancos[]
+  clientes         clientes[]
+  egresos_futuros  egresos_futuros[]
+  ingresos_futuros ingresos_futuros[]
+  typesusers       typesusers         @relation(fields: [typeuser_id], references: [typeuser_id], onUpdate: Restrict, map: "fk_typeuser_id")
+
+  @@index([typeuser_id], map: "fk_typeuser_id")
+}
